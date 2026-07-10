@@ -44,9 +44,12 @@ def user_languages(username:str, reponame:str):
 
 
 
-def readme_extract(username:str, reponame:str):
+def readme_extract(username:str, reponame:str) -> str | None:
 
     resp = requests.get(f"https://api/github.com/users/{username}/{reponame}/readme")
+
+    if resp.status_code == 404:
+        return None
     resp.raise_for_status()
 
     content = resp.json()["content"]

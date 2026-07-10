@@ -36,7 +36,7 @@ def get_user_repo(username :str, include_forks : bool = False)->list[dict]:
     
 
 def user_languages(username:str, reponame:str):
-    resp = requests.get(f"https://api.github.com/users/{username}/{reponame}/languages",headers=HEADERS,timeout=10)
+    resp = requests.get(f"https://api.github.com/users/{username}/{reponame}/languages",headers=HEADERS,)
 
     resp.raise_for_status()
 

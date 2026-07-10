@@ -5,7 +5,7 @@ import base64
 
 load_dotenv()
 
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")  
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
     "Accept": "application/vnd.github+json",
@@ -17,9 +17,9 @@ def get_user_repo(username :str, include_forks : bool = False)->list[dict]:
 
     while True:
         resp = requests.get(
-            f"https://api/github.com/users/{username}/repos",
+            f"https://api.github.com/users/{username}/repos",
             headers = HEADERS,
-            params = {"per_page" : 100,"page":1, "sort":"pushed","direction":"desc",}
+            params = {"per_page" : 100,"page":page, "sort":"pushed","direction":"desc",}
             )
         resp.raise_for_status() # err check
         batch = resp.json()
@@ -36,7 +36,7 @@ def get_user_repo(username :str, include_forks : bool = False)->list[dict]:
     
 
 def user_languages(username:str, reponame:str):
-    resp = requests.get(f"https://api/github.com/users/{username}/{reponame}/languages",headers=HEADERS)
+    resp = requests.get(f"https://api.github.com/users/{username}/{reponame}/languages",headers=HEADERS,timeout=10)
 
     resp.raise_for_status()
 
@@ -46,7 +46,7 @@ def user_languages(username:str, reponame:str):
 
 def readme_extract(username:str, reponame:str) -> str | None:
 
-    resp = requests.get(f"https://api/github.com/users/{username}/{reponame}/readme")
+    resp = requests.get(f"https://api.github.com/users/{username}/{reponame}/readme")
 
     if resp.status_code == 404:
         return None
@@ -55,6 +55,7 @@ def readme_extract(username:str, reponame:str) -> str | None:
     content = resp.json()["content"]
 
     return base64.b64decode(content).decode("utf-8", errors = "ignore")
-
-r = readme_extract("MLbyTharun")
+print("before")
+r = get_user_repo("MLbyTharun")
 print(r)
+print("after")

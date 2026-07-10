@@ -1,6 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
+import base64
+
 load_dotenv()
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")  

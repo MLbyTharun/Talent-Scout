@@ -40,5 +40,16 @@ def user_languages(username:str, reponame:str):
 
     return resp.json()
 
-r = user_languages("MLbyTharun")
+
+
+def readme_extract(username:str, reponame:str):
+
+    resp = requests.get(f"https://api/github.com/users/{username}/{reponame}/readme")
+    resp.raise_for_status()
+
+    content = resp.json()["content"]
+
+    return base64.b64decode(content).decode("utf-8", errors = "ignore")
+
+r = readme_extract("MLbyTharun")
 print(r)

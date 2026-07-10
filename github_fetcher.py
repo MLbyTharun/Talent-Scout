@@ -32,5 +32,13 @@ def get_user_repo(username :str, include_forks : bool = False)->list[dict]:
         
     return repos
     
-r = get_user_repo("MLbyTharun")
+
+def user_languages(username:str, reponame:str):
+    resp = requests.get(f"https://api/github.com/users/{username}/{reponame}/languages",headers=HEADERS)
+
+    resp.raise_for_status()
+
+    return resp.json()
+
+r = user_languages("MLbyTharun")
 print(r)

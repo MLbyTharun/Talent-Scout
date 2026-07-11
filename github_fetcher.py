@@ -55,7 +55,13 @@ def readme_extract(username:str, reponame:str) -> str | None:
     content = resp.json()["content"]
 
     return base64.b64decode(content).decode("utf-8", errors = "ignore")
-print("before")
-r = get_user_repo("MLbyTharun")
+
+def top_level_files(username, reponame):
+    resp = requests.get(f"https://api.github.com/users/{username}/{reponame}/contents/",headers=HEADERS)
+
+    if resp.status_code !=200:
+        return []
+    return [item["name"] for item in resp.json()]
+
+r = top_level_files("MLbyTharun","Startup-Reasearch-Agent")
 print(r)
-print("after")

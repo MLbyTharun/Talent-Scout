@@ -84,3 +84,25 @@ def build_repo_profile(username: str, repo_meta: dict) -> dict:
         "days_since_last_push": days_since_last_push(repo_meta["pushed_at"]),
         "url": repo_meta["html_url"],
     }
+
+
+def get_evaluable_profiles(username: str,max_repos: int = 15,skip_stale_after_days: int = 730) -> list[dict]:
+    """Main entry point: returns a filtered, enriched list of repo profiles ready to hand to the LLM evaluator agent."""
+
+    repos = get_user_repos(username) #list of repos in json data
+
+    # Filter: Recency, readme, description
+
+    repos = [
+        r for r in repos
+        if days_since_last_push(r["pushed_at"]) <= skip_stale_after_days
+    ][:max_repos]
+
+    profiles = []
+    for r in repos:
+        profile = build_repo_profile(username, r)
+        if profile["readme"] is None and not profile["description"]:
+            continue  # skips
+        profiles.append(profile)
+
+    return profiles

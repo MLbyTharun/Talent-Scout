@@ -69,3 +69,18 @@ def days_since_last_push(pushed_at: str) -> int:
     pushed = datetime.strptime(pushed_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     return (datetime.now(timezone.utc) - pushed).days
 
+
+def build_repo_profile(username: str, repo_meta: dict) -> dict:
+    """Assemble one repo's worth of context for the evaluator agent."""
+    owner, name = username, repo_meta["name"]
+    return {
+        "name": name,
+        "description": repo_meta.get("description"),
+        "stars": repo_meta.get("stargazers_count", 0),
+        "primary_language": repo_meta.get("language"),
+        "languages": get_languages(owner, name),
+        "readme": get_readme(owner, name),
+        "top_level_files": get_top_level_files(owner, name),
+        "days_since_last_push": days_since_last_push(repo_meta["pushed_at"]),
+        "url": repo_meta["html_url"],
+    }

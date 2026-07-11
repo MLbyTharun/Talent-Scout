@@ -106,3 +106,12 @@ def get_evaluable_profiles(username: str,max_repos: int = 15,skip_stale_after_da
         profiles.append(profile)
 
     return profiles
+
+
+if __name__ == "__main__":
+    import json
+    import sys
+
+    username = sys.argv[1] if len(sys.argv) > 1 else "MLbyTharun"
+    profiles = get_evaluable_profiles(username, max_repos=5)
+    print(json.dumps(profiles, indent=2)[:3000])

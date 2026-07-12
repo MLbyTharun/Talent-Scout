@@ -38,5 +38,18 @@ def github_repos(file):
         
     return repos
 
-c = github_repos("Tharun.pdf")
-print(c)
+def github_to_api(urls):
+    apis = []
+    for url in urls:
+        parsed = urlparse(url)
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) == 1:
+            apis.append(f"https:api.github.com/users/{parts[0]}")
+        elif len(parts) >= 2:
+            apis.append(f"https://api.github.com/repos/{parts[0]}/{parts[1]}")
+    
+    return apis
+
+x = github_repos("Tharun.pdf")
+y = github_to_api(x)
+print(y)

@@ -3,8 +3,11 @@ import base64
 import os
 import requests
 from datetime import datetime, timezone
+from dotenv import load_dotenv
 
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")  # personal access token, no special scopes needed
+load_dotenv()
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # personal access token, no special scopes needed
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
     "Accept": "application/vnd.github+json",

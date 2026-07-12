@@ -50,6 +50,40 @@ def github_to_api(urls):
     
     return apis
 
-x = github_repos("Tharun.pdf")
-y = github_to_api(x)
-print(y)
+#-----------------------------------------------------------------------------------------------
+
+import base64
+import os
+import requests
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # personal access token, no special scopes needed
+HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
+    "Accept": "application/vnd.github+json",
+}
+
+def all(file):
+    
+    x = github_repos(file)
+    y = github_to_api(x)
+    
+    return y
+
+def get_languages(owner: str, repo: str) -> dict:
+    """Bytes of code per language. Useful for tech-stack matching."""
+    resp = requests.get(
+        f"https://api.github.com/repos/{owner}/{repo}/languages", headers=HEADERS
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+def get_lang(api):
+    resp = requests.get(api,headers=HEADERS)
+    resp.raise_for_status()
+    return resp.json()
+
+print(get_lang('https://api.github.com/repos/MLbyTharun/Startup-Research-Agent/contents/'))

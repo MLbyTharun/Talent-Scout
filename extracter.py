@@ -14,34 +14,29 @@ def txt_extract(file):
 
 # Links Extracter
 
-doc = fitz.open("Tharun.pdf")
+def github_repos(file):
+    doc = fitz.open(file)
 
-all_links = []
-
-for page in doc:
-    links = page.get_links()
-
-    for link in links:
-        if "uri" in link:
-            all_links.append(link["uri"])
-
-
-def github_repos(link_list):
+    all_links = []
     repos = []
+    for page in doc:
+        links = page.get_links()
 
-    for uri in link_list:
+        for link in links:
+            if "uri" in link:
+                all_links.append(link["uri"])
+            
+    for uri in all_links:
         parsed = urlparse(uri)
-
-        if parsed.netloc.lower() not in ["github.com", "www.github.com"]:
+        
+        if parsed.netloc.lower() not in ["github.com","www.github.com"]:
             continue
 
         parts = [p for p in parsed.path.split("/") if p]
-
         if len(parts) >= 2:
             repos.append(uri)
-
+        
     return repos
 
-
-x = github_repos(all_links)
-print(x)
+c = github_repos("Tharun.pdf")
+print(c)

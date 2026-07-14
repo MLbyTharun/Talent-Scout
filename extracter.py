@@ -44,3 +44,8 @@ def extract_github_links(pdf_path: str) -> dict:
 
     return {"username": username, "repos": repos, "repo_apis": repo_apis}
 
+
+xi=extract_github_links("Tharun.pdf")["repo_apis"]
+data = get_evaluable_profiles(xi)
+for item in data:
+    print(item["name"])

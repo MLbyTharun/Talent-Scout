@@ -50,8 +50,7 @@ def get_readme(api_url: str) -> str | None:
 def get_top_level_files(api_url: str) -> list[str]:
     """Top-level file/folder names — cheap signal for tooling (Dockerfile, requirements.txt, etc.)"""
     resp = requests.get(api_url.rstrip("/") + "/contents/", headers=HEADERS)
-    if resp.status_code != 200:
-        return []
+    resp.raise_for_status()
     return [item["name"] for item in resp.json()]
 
 

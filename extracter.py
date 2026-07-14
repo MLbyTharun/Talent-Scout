@@ -1,89 +1,46 @@
-from pypdf import PdfReader
-import pandas as pd
+
 import fitz
 from urllib.parse import urlparse
-
-# Extracts text from candidate and job descrptn
-def txt_extract(file):
-    pdf = PdfReader(file)
-    for page in pdf.pages:
-        txt = page.extract_text() or ""
-    
-    return txt
+from github_fetcher import get_evaluable_profiles
 
 
-# Links Extracter
-
-def github_repos(file):
-    doc = fitz.open(file)
+def extract_github_links(pdf_path: str) -> dict:
+    """
+    Returns {"username": str | None, "repos": [github.com urls], "repo_apis": [api.github.com urls]}.
+    Repos are deduped by owner/repo (a deep link to a specific file
+    collapses to that repo's root URL).
+    """
+    doc = fitz.open(pdf_path)
 
     all_links = []
-    repos = []
     for page in doc:
-        links = page.get_links()
-
-        for link in links:
+        for link in page.get_links():
             if "uri" in link:
                 all_links.append(link["uri"])
-            
+
+    seen_repos = set()
+    repos = []
+    repo_apis = []
+    username = None
+
     for uri in all_links:
         parsed = urlparse(uri)
-        
-        if parsed.netloc.lower() not in ["github.com","www.github.com"]:
+        if parsed.netloc.lower() not in ("github.com", "www.github.com"):
             continue
 
         parts = [p for p in parsed.path.split("/") if p]
+        if not parts:
+            continue
+
+        if username is None:
+            username = parts[0]  # first github.com/<x>/... link found sets it
+
         if len(parts) >= 2:
-            repos.append(uri)
-        
-    return repos
+            repo_key = f"{parts[0]}/{parts[1]}"
+            if repo_key not in seen_repos:
+                seen_repos.add(repo_key)
+                repos.append(f"https://github.com/{repo_key}")
+                repo_apis.append(f"https://api.github.com/repos/{repo_key}")
 
-def github_to_api(urls):
-    apis = []
-    for url in urls:
-        parsed = urlparse(url)
-        parts = parsed.path.strip("/").split("/")
-        if len(parts) == 1:
-            apis.append(f"https:api.github.com/users/{parts[0]}")
-        elif len(parts) >= 2:
-            apis.append(f"https://api.github.com/repos/{parts[0]}/{parts[1]}")
-    
-    return apis
+    return {"username": username, "repos": repos, "repo_apis": repo_apis}
 
-#-----------------------------------------------------------------------------------------------
-
-import base64
-import os
-import requests
-from datetime import datetime, timezone
-from dotenv import load_dotenv
-
-load_dotenv()
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # personal access token, no special scopes needed
-HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
-    "Accept": "application/vnd.github+json",
-}
-
-def all(file):
-    
-    x = github_repos(file)
-    y = github_to_api(x)
-    
-    return y
-
-def get_languages(owner: str, repo: str) -> dict:
-    """Bytes of code per language. Useful for tech-stack matching."""
-    resp = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}/languages", headers=HEADERS
-    )
-    resp.raise_for_status()
-    return resp.json()
-
-def get_lang(api):
-    resp = requests.get(api,headers=HEADERS)
-    resp.raise_for_status()
-    return resp.json()
-
-print(get_lang('https://api.github.com/repos/MLbyTharun/Startup-Research-Agent/contents/'))

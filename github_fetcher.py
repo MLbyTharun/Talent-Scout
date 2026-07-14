@@ -105,6 +105,6 @@ if __name__ == "__main__":
     import json
     import sys
 
-    apis = sys.argv[1:] or ["https://api.github.com/repos/MLbyTharun/crm-outreach-assistant"]
+    apis = sys.argv[1:] or ["https://api.github.com/repos/MLbyTharun/HR-Knowledge-Assistant"]
     profiles = get_evaluable_profiles(apis)
-    print(json.dumps(profiles, indent=2)[:3000])
+    print(json.dumps(profiles, indent=2))

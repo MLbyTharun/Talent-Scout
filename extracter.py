@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 import fitz  # PyMuPDF
 import pdfplumber
 from openai import OpenAI
-
+from github_fetcher import get_evaluable_profiles
 
 # ---- 1. Deterministic text extraction ----
 
@@ -190,12 +190,21 @@ def parse_resume_node(state: dict) -> dict:
     return result
 
 
-if __name__ == "__main__":
-    import sys
+#-------------------------------------------------------------------
+xi=extract_github_links("Tharun.pdf")["repo_apis"]
+data = get_evaluable_profiles(xi)
+for item in data:
+    print(item["name"])
 
-    
-    text = extract_resume_text("Tharun.pdf")
-    print("--- Extracted text (first 500 chars) ---")
-    print(text[:500])
-    print("\n--- Structured (requires NVIDIA_API_KEY) ---")
-    print(json.dumps(structure_resume(text), indent=2))
+
+
+
+#if __name__ == "__main__":
+#    import sys
+#
+#    
+#    text = extract_resume_text("Tharun.pdf")
+#    print("--- Extracted text (first 500 chars) ---")
+#    print(text[:500])
+#    print("\n--- Structured (requires NVIDIA_API_KEY) ---")
+#    print(json.dumps(structure_resume(text), indent=2))

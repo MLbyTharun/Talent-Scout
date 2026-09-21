@@ -1,0 +1,13 @@
+langgraph>=1.2
+openai>=1.0
+groq>=0.30
+pdfplumber>=0.11
+pymupdf>=1.24
+streamlit>=1.35
+requests>=2.31
+python-dotenv>=1.0
+langchain-core>=0.3
+langchain-google-genai>=2.0
+# Optional — only needed for use_crew=True (3-agent evaluation):
+# crewai>=0.100
+# litellm>=1.50

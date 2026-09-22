@@ -5,6 +5,6 @@ pymupdf>=1.24
 streamlit>=1.35
 requests>=2.31
 python-dotenv>=1.0
-# Optional — only needed for use_crew=True (3-agent evaluation):
+# Optional
 # crewai>=0.100
 # litellm>=1.50

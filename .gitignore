@@ -1,8 +1,8 @@
 .env
+*.pdf
+__pycache__/
+*.pyc
+.venv/
+.streamlit/secrets.toml
 planning.txt
-x.py
-n.py
-tasks.yaml
-agent.yaml
-.md
-ghjhgjhg.pdf
+useless/

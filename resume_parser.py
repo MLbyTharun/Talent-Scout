@@ -35,3 +35,29 @@ GITHUB_URL_RE = re.compile(
 )
 
 
+# ---- 1. Deterministic text extraction ----
+
+def extract_resume_text(pdf_path: str) -> str:
+    """
+    Resumes are text-heavy, single/double-column documents — text
+    extraction is the right tool here (not rasterization). If a resume
+    ever comes back garbled or empty, that's the signal it's a scanned
+    image and needs OCR instead — not handled here, flag it if you hit one.
+    """
+    text_parts = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
+
+    text = "\n".join(text_parts).strip()
+
+    if not text:
+        raise ValueError(
+            f"No extractable text in {pdf_path} — likely a scanned/image "
+            "resume. Needs OCR (pytesseract), not handled by this parser."
+        )
+
+    return text
+

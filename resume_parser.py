@@ -165,3 +165,57 @@ Output ONLY valid JSON with this shape, no other text:
 If a field isn't present in the resume, use null or an empty list — never invent data.
 """
 
+
+RESUME_SCHEMA_DEFAULTS = {
+    "name": None,
+    "github_username": None,
+    "skills": [],
+    "experience": [],
+    "projects": [],
+    "education": [],
+}
+
+
+def _strip_code_fences(raw: str) -> str:
+    raw = (raw or "").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`").strip()
+        if raw.lower().startswith("json"):
+            raw = raw[4:].strip()
+    return raw
+
+
+def structure_resume(resume_text: str, _retry: bool = True) -> dict:
+    from llm_client import chat_completion
+
+    client, model = _get_client()
+    response = chat_completion(
+        client,
+        model,
+        messages=[
+            {"role": "system", "content": RESUME_SYSTEM_PROMPT},
+            {"role": "user", "content": resume_text},
+        ],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+    raw = _strip_code_fences(response.choices[0].message.content)
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        data = None
+    if not isinstance(data, dict):
+        # model returned a JSON list/scalar or non-JSON text — retry once,
+        # then fail with the raw output for diagnosis
+        if _retry:
+            return structure_resume(resume_text, _retry=False)
+        raise ValueError(
+            f"Model did not return a JSON object after retry. Raw output "
+            f"(first 300 chars): {raw[:300]!r}"
+        )
+
+    # fill any missing keys with safe defaults so downstream code
+    # (parse_resume_node, evaluate_node) never has to guess
+    return {**RESUME_SCHEMA_DEFAULTS, **data}
+

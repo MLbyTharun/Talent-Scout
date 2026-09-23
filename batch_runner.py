@@ -13,7 +13,6 @@ Two things batch processing needs that single-candidate runs don't:
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-import traceback
 
 from agent_graph import build_graph
 
@@ -27,7 +26,6 @@ class CandidateResult:
     repo_profiles: list = field(default_factory=list)
     github_fetch_error: str | None = None
     error: str | None = None
-    traceback: str | None = None  # full trace, for when str(e) alone isn't enough to diagnose
 
 
 def evaluate_one(resume_path: str, jd_text: str, use_crew: bool = True, username: str | None = None, _app=None) -> CandidateResult:
@@ -49,16 +47,14 @@ def evaluate_one(resume_path: str, jd_text: str, use_crew: bool = True, username
             github_fetch_error=result.get("github_fetch_error"),
         )
     except Exception as e:
-        # a bad PDF, missing GitHub username, or API failure for ONE
-        # candidate shouldn't stop the rest of the batch from running —
-        # but keep the full traceback, since str(e) alone can hide which
-        # line/call actually failed (e.g. a bare "404" tells you nothing
-        # about whether it was GitHub or the LLM API that returned it)
+        # A bad PDF, missing GitHub username, or API failure for ONE
+        # candidate shouldn't stop the rest of the batch. Expose only the
+        # exception message — full tracebacks stay out of the UI/results
+        # so paths and internals aren't leaked to whoever runs the app.
         return CandidateResult(
             resume_path=resume_path,
             success=False,
-            error=str(e),
-            traceback=traceback.format_exc(),
+            error=f"{type(e).__name__}: {e}",
         )
 
 

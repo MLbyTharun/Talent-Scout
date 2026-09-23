@@ -1,0 +1,18 @@
+# Hermès-inspired theme: warm orange, ivory cream, elegant ink.
+[theme]
+base = "light"
+primaryColor = "#F37021"
+backgroundColor = "#FBF6EF"
+secondaryBackgroundColor = "#F3EADF"
+textColor = "#2B2622"
+font = "sans-serif"
+baseRadius = "12px"
+borderColor = "#E8DCCB"
+linkColor = "#C45B10"
+
+# Local-only: the app uses server-side API keys with no auth layer, so it
+# must not be reachable from the network. Override only behind a reverse
+# proxy that adds authentication.
+[server]
+address = "127.0.0.1"
+

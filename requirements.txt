@@ -1,10 +1,10 @@
-langgraph>=1.2
-openai>=1.0
-pdfplumber>=0.11
-pymupdf>=1.24
-streamlit>=1.35
-requests>=2.31
-python-dotenv>=1.0
-# Optional
+langgraph==1.2.11
+openai==3.3.1
+pdfplumber==0.11.10
+pymupdf==1.28.2
+streamlit==1.62.0
+requests==2.34.2
+python-dotenv==1.2.3
+# Optional (multi-agent crew evaluation)
 # crewai>=0.100
 # litellm>=1.50

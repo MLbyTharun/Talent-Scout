@@ -61,3 +61,84 @@ def extract_resume_text(pdf_path: str) -> str:
 
     return text
 
+
+# ---- 1b. Deterministic GitHub link extraction ----
+# Catches links embedded as clickable hyperlink annotations (e.g. a
+# "GitHub" icon/button) that plain text extraction above never sees,
+# since the visible text might just say "GitHub" with the URL hidden
+# in the PDF's link metadata. More reliable than asking the LLM to spot
+# a URL that may not even appear as text in the extracted content.
+
+def extract_github_links(pdf_path: str) -> dict:
+    """
+    Returns {"username": str | None, "repos": [github.com urls], "repo_apis": [api.github.com urls]}.
+    Repos are deduped by owner/repo (a deep link to a specific file
+    collapses to that repo's root URL).
+
+    Sources: PDF hyperlink annotations AND plain-text github.com/... matches
+    (resumes with non-clickable text links would otherwise yield zero repos).
+    """
+    all_links: list[str] = []
+    try:
+        with fitz.open(pdf_path) as doc:
+            for page in doc:
+                for link in page.get_links():
+                    if "uri" in link:
+                        all_links.append(link["uri"])
+    except FileNotFoundError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Couldn't read PDF links from {pdf_path}: {e}") from e
+
+    # Fallback: plain-text URLs the annotation scan missed.
+    try:
+        resume_text = extract_resume_text(pdf_path)
+        all_links.extend(
+            "https://" + m.group(0) for m in GITHUB_URL_RE.finditer(resume_text)
+        )
+    except ValueError:
+        pass  # scanned PDF — annotation links alone are all we have
+
+    seen_repos = set()
+    repos = []
+    repo_apis = []
+    profile_username = None
+    repo_owners: set[str] = set()
+
+    for uri in all_links:
+        parsed = urlparse(uri if "://" in uri else f"https://{uri}")
+        if parsed.netloc.lower() not in ("github.com", "www.github.com"):
+            continue
+
+        parts = [p for p in parsed.path.split("/") if p]
+        if not parts:
+            continue
+        if parts[0].lower() in RESERVED_GITHUB_ROUTES:
+            continue
+
+        if len(parts) == 1 and profile_username is None:
+            # bare github.com/<user> profile link — only that counts as
+            # the candidate's username (a repo under someone else's org
+            # must not become their username)
+            profile_username = parts[0]
+
+        if len(parts) >= 2:
+            # skip reserved second segments (e.g. github.com/orgs/... handled above,
+            # plus actions like /settings, /sponsors for a user page)
+            if parts[1].lower() in RESERVED_GITHUB_ROUTES:
+                continue
+            repo_key = f"{parts[0]}/{parts[1]}"
+            if repo_key not in seen_repos:
+                seen_repos.add(repo_key)
+                repos.append(f"https://github.com/{repo_key}")
+                repo_apis.append(f"https://api.github.com/repos/{repo_key}")
+            repo_owners.add(parts[0])
+
+    # username: explicit profile link wins; else the single owner of all
+    # linked repos (ambiguous multi-owner resumes fall through to the LLM)
+    username = profile_username
+    if username is None and len(repo_owners) == 1:
+        username = next(iter(repo_owners))
+
+    return {"username": username, "repos": repos, "repo_apis": repo_apis}
+

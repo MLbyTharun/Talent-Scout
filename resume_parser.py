@@ -142,3 +142,26 @@ def extract_github_links(pdf_path: str) -> dict:
 
     return {"username": username, "repos": repos, "repo_apis": repo_apis}
 
+
+# ---- 2. LLM structuring ----
+
+def _get_client():
+    from llm_client import get_llm_client
+
+    return get_llm_client()
+
+RESUME_SYSTEM_PROMPT = """You extract structured data from resume text.
+Output ONLY valid JSON with this shape, no other text:
+
+{
+  "name": "string or null",
+  "github_username": "string or null (look for a github.com/... link)",
+  "skills": ["list", "of", "technical", "skills"],
+  "experience": [{"title": "", "company": "", "duration": "", "highlights": ["..."]}],
+  "projects": [{"name": "", "description": "", "tech_stack": ["..."]}],
+  "education": [{"degree": "", "institution": "", "year": ""}]
+}
+
+If a field isn't present in the resume, use null or an empty list — never invent data.
+"""
+

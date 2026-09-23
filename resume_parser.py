@@ -254,3 +254,13 @@ def parse_resume_node(state: dict) -> dict:
 
     return result
 
+
+if __name__ == "__main__":
+    import sys
+
+    path = sys.argv[1]
+    text = extract_resume_text(path)
+    print("--- Extracted text (first 500 chars) ---")
+    print(text[:500])
+    print("\n--- Structured (requires GROQ_API_KEY or GOOGLE_API_KEY) ---")
+    print(json.dumps(structure_resume(text), indent=2))

@@ -219,3 +219,38 @@ def structure_resume(resume_text: str, _retry: bool = True) -> dict:
     # (parse_resume_node, evaluate_node) never has to guess
     return {**RESUME_SCHEMA_DEFAULTS, **data}
 
+
+# ---- 3. Graph node ----
+
+def parse_resume_node(state: dict) -> dict:
+    """
+    Drop-in node for agent_graph.py. Expects state["resume_path"],
+    produces state["resume_text"] and state["resume_data"].
+
+    GitHub username resolution order:
+      1. state["username"] if explicitly passed in
+      2. a github.com link found in the PDF's hyperlink annotations (reliable)
+      3. the LLM's best guess from the resume text (fallback)
+
+    Username may be None (resume-only flow) — fetch_github_node already
+    handles empty repo_apis gracefully, so don't block evaluation here.
+    """
+    if not state.get("resume_path"):
+        raise ValueError("Missing state['resume_path'] — pass a PDF path.")
+    text = extract_resume_text(state["resume_path"])
+    data = structure_resume(text)
+    links = extract_github_links(state["resume_path"])
+
+    result = {
+        "resume_text": text,
+        "resume_data": data,
+        "linked_repos": links["repos"],       # for display/notes
+        "repo_apis": links["repo_apis"],       # what fetch_github_node actually uses
+    }
+
+    username = state.get("username") or links["username"] or data.get("github_username")
+    # None is allowed — means "no GitHub signal, evaluate resume+JD only".
+    result["username"] = username
+
+    return result
+
